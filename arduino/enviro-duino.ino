@@ -1,6 +1,9 @@
-float temp;
-int tempPin = 0;
+#include<DS18B20.h>
 
+// https://github.com/matmunk/DS18B20
+DS18B20 ds(2);
+
+int timer;
 String inputString = "";
 boolean inputComplete = false;
 
@@ -10,6 +13,9 @@ void setup() {
 }
 
 void loop() {
+  int mainDelay = 1000; // every second
+  int innerDelay = 60000; // every minute
+  
   inputEvent();
   if (inputComplete) {
     processInput(inputString);
@@ -17,25 +23,33 @@ void loop() {
     inputComplete = false;
   }
   
-  float temp = getFTemp(tempPin);
-  writeTemp("TMP1", temp);
-  delay(6000);
+  if (timer == innerDelay) {
+    // Things to run at a longer interval
+    readTemperatures();
+    timer = 0;
+  } else {
+    timer += mainDelay;
+  }
+
+  delay(mainDelay);
 }
 
-float getVoltage(int pin){
-  return (analogRead(pin) * .004882814);
-}
-
-float getFTemp(int pin) {
-  float v = getVoltage(pin);
-  return (((v -.5) * 100L) *9.0/5.0) + 32.0;
-}
-
-void writeTemp(String sensor, float temp) {
-  Serial.print("[");
-  Serial.print(sensor);
-  Serial.print("] ");
-  Serial.println(temp);
+void readTemperatures() {
+  while (ds.selectNext()) {
+    uint8_t address[8];
+    String addr = "";
+    char tempBuffer[16];
+    
+    ds.getAddress(address);
+    for (uint8_t i = 0; i < 8; i++){
+      addr += address[i];
+    }
+    
+    dtostrf(ds.getTempF(), 6, 2, tempBuffer);
+    String output = "[" + addr + "] " + tempBuffer;
+    
+    Serial.println(output);
+  }
 }
 
 void inputEvent() {
