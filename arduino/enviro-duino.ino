@@ -1,7 +1,14 @@
 #include<DS18B20.h>
+#include <DHT.h>
+#include <DHT_U.h>
 
 // https://github.com/matmunk/DS18B20
 DS18B20 ds(2);
+
+// https://github.com/adafruit/DHT-sensor-library
+#define DHT_PIN 3
+#define DHT_TYPE DHT22
+DHT dht(DHT_PIN, DHT_TYPE);
 
 int timer;
 String inputString = "";
@@ -10,11 +17,13 @@ boolean inputComplete = false;
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
+  dht.begin();
 }
 
 void loop() {
   int mainDelay = 1000; // every second
   int innerDelay = 60000; // every minute
+//  int innerDelay = 2000; // for testing...
   
   inputEvent();
   if (inputComplete) {
@@ -26,6 +35,7 @@ void loop() {
   if (timer == innerDelay) {
     // Things to run at a longer interval
     readTemperatures();
+    readHumidity();
     timer = 0;
   } else {
     timer += mainDelay;
@@ -44,12 +54,24 @@ void readTemperatures() {
     for (uint8_t i = 0; i < 8; i++){
       addr += address[i];
     }
-    
-    dtostrf(ds.getTempF(), 6, 2, tempBuffer);
-    String output = "[" + addr + "] " + tempBuffer;
+
+    float temp = ds.getTempF();
+    String output = formatOutput(addr, temp);
     
     Serial.println(output);
   }
+}
+
+void readHumidity() {
+  char humBuffer[8];
+  String name = "DHT22";
+  
+  float hum = dht.readHumidity();
+  String humOutput = formatOutput(name, hum);
+
+  float temp = dht.readTemperature(true); // true for F
+
+  Serial.println(humOutput);
 }
 
 void inputEvent() {
@@ -82,4 +104,13 @@ void processInput(String input) {
 //      powerOff();
 //    }
 //  }
+}
+
+String formatOutput(String name, float value) {
+  char valueBuff[16];
+  
+  dtostrf(value, 6, 2, valueBuff);
+
+  String output = "[" + name + "] " + valueBuff;
+  return output;
 }
