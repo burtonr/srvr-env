@@ -10,6 +10,12 @@ DS18B20 ds(2);
 #define DHT_TYPE DHT22
 DHT dht(DHT_PIN, DHT_TYPE);
 
+int DOOR_PIN = 4;
+int PREV_STATE = -1;
+int CUR_STATE = -1;
+int CLOSED = 1;
+int OPEN = 0;
+
 int timer;
 String inputString = "";
 boolean inputComplete = false;
@@ -18,6 +24,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
   dht.begin();
+  pinMode(DOOR_PIN, INPUT_PULLUP);
 }
 
 void loop() {
@@ -31,6 +38,8 @@ void loop() {
     inputString = "";
     inputComplete = false;
   }
+
+  checkDoor();
   
   if (timer == innerDelay) {
     // Things to run at a longer interval
@@ -42,6 +51,23 @@ void loop() {
   }
 
   delay(mainDelay);
+}
+
+void checkDoor() {
+  int doorState = !digitalRead(DOOR_PIN);
+  if (doorState != CUR_STATE) {
+    String name = "[DOOR] ";
+    String status = "";
+    if (doorState == OPEN) {
+      status = "OPEN";
+    }
+    if (doorState == CLOSED) {
+      status = "CLOSED";
+    }
+
+    Serial.println(name + status);
+    CUR_STATE = doorState;
+  }
 }
 
 void readTemperatures() {
