@@ -11,7 +11,6 @@ DS18B20 ds(2);
 DHT dht(DHT_PIN, DHT_TYPE);
 
 int DOOR_PIN = 4;
-int PREV_STATE = -1;
 int CUR_STATE = -1;
 int CLOSED = 1;
 int OPEN = 0;
@@ -21,7 +20,6 @@ String inputString = "";
 boolean inputComplete = false;
 
 void setup() {
-  // put your setup code here, to run once:
   Serial.begin(9600);
   dht.begin();
   pinMode(DOOR_PIN, INPUT_PULLUP);
