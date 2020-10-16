@@ -87,11 +87,12 @@ func readTemp(s *serial.Port) {
 		if len(results) == 1 {
 			kv := strings.Split(results[0], " ")
 			for _, v := range kv {
-				if v == "" {
+				keyVal := strings.TrimSpace(v)
+				if keyVal == "" {
 					continue
 				}
 
-				if strings.HasPrefix(v, "[") {
+				if strings.HasPrefix(keyVal, "[") {
 					v1 := strings.Replace(v, "[", "", 1)
 					key = strings.Replace(v1, "]", "", 1)
 				} else {
