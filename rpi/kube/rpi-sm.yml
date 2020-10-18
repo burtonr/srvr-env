@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: rpi-metrics
+  labels:
+    k8s-app: rpi-metrics
+    prometheus: k8s
+spec:
+  selector:
+    matchLabels:
+      k8s-app: rpi-metrics
+  namespaceSelector: 
+    matchNames:
+    - monitoring
+  endpoints:
+  - port: metrics
+    interval: 60s
+    honorLabels: true
