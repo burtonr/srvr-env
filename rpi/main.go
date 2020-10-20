@@ -5,33 +5,45 @@ import (
 	"log"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/tarm/serial"
 )
 
 var (
 	serialRegex = `(\[.*?\])(?:\s+)(.+)` // Expect output from serial (Arduino) to be "[the sensor key] some_value"
-	tempSensors = map[string]string{ // Sensor address/name | installed location
-		"4068167721416066": "Floor",
-		"DHT22": "Center",
-	}
-	tempGauges = promauto.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: "BurtonR",
-			Subsystem: "ServerRoom",
-			Name: "Temperature",
-			Help: "Temperature measurements",
-		},
-		[]string{
-			"name",
-			"location",
-		},
-	)
+	// tempSensors = map[string]string{     // Sensor address/name | installed location
+	// 	"4068167721416066": "Floor",
+	// 	"DHT22":            "Center",
+	// }
+	// humiditySensors = map[string]string{
+	// 	"DHT22": "SOMETHING",
+	// }
+	// tempGauges = promauto.NewGaugeVec(
+	// 	prometheus.GaugeOpts{
+	// 		Namespace: "BurtonR",
+	// 		Subsystem: "ServerRoom",
+	// 		Name:      "Temperature",
+	// 		Help:      "Temperature measurements",
+	// 	},
+	// 	[]string{
+	// 		"name",
+	// 		"location",
+	// 	},
+	// )
+	// humidGauges = promauto.NewGaugeVex(
+	// 	prometheus.GaugeOpts{
+	// 		Namespace: "BurtonR",
+	// 		Subsystem: "ServerRoom",
+	// 		Name:      "Humidity",
+	// 		Help:      "Humidity measurements",
+	// 	},
+	// 	[]string{
+	// 		"name",
+	// 		"location",
+	// 	},
+	// )
 )
 
 func main() {
@@ -41,31 +53,30 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//prometheus.MustRegister(tempGauges)
 
-	go readTemp(s)
+	go readSerial(s)
 
 	http.Handle("/metrics", promhttp.Handler())
 	http.ListenAndServe(":8888", nil)
 }
 
-func recordMetric(key, value string) {
+// func recordMetric(key, value string) {
 
-	newTemp, tErr := strconv.ParseFloat(value, 64)
-	if tErr != nil {
-		fmt.Printf("Temperature for [%s] cannot be parsed: %s\n", key, value)
-		return
-	}
+// 	newTemp, tErr := strconv.ParseFloat(value, 64)
+// 	if tErr != nil {
+// 		fmt.Printf("Temperature for [%s] cannot be parsed: %s\n", key, value)
+// 		return
+// 	}
 
-	location, ok := tempSensors[key]
-	if !ok {
-		location = "Undefined"
-	}
+// 	location, ok := tempSensors[key]
+// 	if !ok {
+// 		location = "Undefined"
+// 	}
 
-	tempGauges.WithLabelValues(key, location).Set(newTemp)
-}
+// 	tempGauges.WithLabelValues(key, location).Set(newTemp)
+// }
 
-func readTemp(s *serial.Port) {
+func readSerial(s *serial.Port) {
 	buf := make([]byte, 128)
 	var message string
 	var key string
@@ -100,8 +111,7 @@ func readTemp(s *serial.Port) {
 				}
 			}
 		}
-		// TODO: Store Prometheus Metric
-		fmt.Printf("Key: [%s] -> Value: [%s]\n", key, val)
+
 		recordMetric(key, val)
 		message = ""
 	}
