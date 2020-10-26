@@ -3,16 +3,17 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
-	"os/signal"
+	"net/http"
 	"regexp"
 	"strings"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/tarm/serial"
 )
 
-var tempRegex = `(\[TMP[0-9]\])\s([0-9]{2,3}.[0-9]{2,3})`
-var allRegex = `.+`
+var (
+	serialRegex = `(\[.*?\])(?:\s+)(.+)` // Expect output from serial (Arduino) to be "[the sensor key] some_value"
+)
 
 func main() {
 	// TODO: Find, rather than hard-code, the device location
@@ -22,27 +23,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	go readTemp(s)
+	go readSerial(s)
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		for range c {
-			fmt.Println("Stopping listener")
-			os.Exit(1) // Exit on interrupt
-		}
-	}()
-
-	// Run forever
-	for {
-	}
+	http.Handle("/metrics", promhttp.Handler())
+	http.ListenAndServe(":8888", nil)
 }
 
-func readTemp(s *serial.Port) {
+func readSerial(s *serial.Port) {
 	buf := make([]byte, 128)
 	var message string
-	// re := regexp.MustCompile(tempRegex)
-	re := regexp.MustCompile(allRegex)
+	var key string
+	var val string
+
+	re := regexp.MustCompile(serialRegex)
 
 	for {
 		n, err := s.Read(buf)
@@ -53,14 +46,27 @@ func readTemp(s *serial.Port) {
 		message += string(buf[:n])
 		message = strings.Replace(message, "\r", "", -1)
 		message = strings.Replace(message, "\n", "", -1)
+		results := re.FindAllString(message, -1)
 
-		results := re.FindStringSubmatch(message)
+		if len(results) == 1 {
+			kv := strings.Split(results[0], " ")
+			for _, v := range kv {
+				keyVal := strings.TrimSpace(v)
+				if keyVal == "" {
+					continue
+				}
 
-		if 0 < len(results) {
-			fmt.Println(results[0])
-			// TODO: Push Prometheus metric (gauge)
-			message = ""
+				if strings.HasPrefix(keyVal, "[") {
+					v1 := strings.Replace(v, "[", "", 1)
+					key = strings.Replace(v1, "]", "", 1)
+				} else {
+					val = v
+				}
+			}
 		}
+
+		recordMetric(key, val)
+		message = ""
 	}
 }
 
