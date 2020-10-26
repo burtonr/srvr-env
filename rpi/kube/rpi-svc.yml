@@ -7,7 +7,7 @@ metadata:
     k8s-app: rpi-metrics
 spec:
   type: ExternalName
-  externalName: 192.168.0.76
+  externalName: 192.168.0.49
   clusterIP: ""
   ports:
   - name: metrics
