@@ -1,4 +1,4 @@
-# GoLand Server (Raspberry Pi)
+# GoLang Server (Raspberry Pi)
 This small application is intended to receive information from the serial bus of the connected Arduino.
 
 This application will then do some minor processing on the data to transform it to the appropriate structure, and invoke the appropriate metric.
