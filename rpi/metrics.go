@@ -12,8 +12,8 @@ type sensorType string
 
 const (
 	Temperature sensorType = "Temperature"
-	Humidity sensorType = "Humidity"
-	Status sensorType = "Status"
+	Humidity    sensorType = "Humidity"
+	Status      sensorType = "Status"
 )
 
 type sensor struct {
@@ -23,19 +23,18 @@ type sensor struct {
 }
 
 var (
-	metricNS    = "burtonr"
-	metricSS    = "server_room"
-	sensors		= map[string]sensor{
-		"DHT22": { "DHT22", Humidity, "mount"},
-		"DOOR": {"Door", Status, "door"},
+	metricNS = "burtonr"
+	metricSS = "server_room"
+	sensors  = map[string]sensor{
+		"DHT22":               {"DHT22", Humidity, "mount"},
+		"DOOR":                {"Door", Status, "door"},
 		"4023624112116213133": {"4023624112116213133", Temperature, "vent"},
-		"40751127214160105": {"40751127214160105", Temperature, "top_rack"},
-		"402441612116213104": {"402441612116213104", Temperature, "floor"},
-		"4068167721416066": {"4068167721416066", Temperature, "desk"},
-		"40111737214160174": {"40111737214160174", Temperature, ""},
-
+		"40751127214160105":   {"40751127214160105", Temperature, "top_rack"},
+		"402441612116213104":  {"402441612116213104", Temperature, "floor"},
+		"4068167721416066":    {"4068167721416066", Temperature, "desk"},
+		"40111737214160174":   {"40111737214160174", Temperature, ""},
 	}
-	tempGauges    = promauto.NewGaugeVec(
+	tempGauges = promauto.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: metricNS,
 			Subsystem: metricSS,
@@ -75,7 +74,7 @@ var (
 func recordMetric(key, value string) {
 	sensor, found := sensors[key]
 	if !found {
-		fmt.Printf("Sensor [%s] received, but not found in the available sensors!\n", key)
+		fmt.Printf("Sensor [%s] received, but not found in the available sensors! Value: [%s]\n", key, value)
 	}
 
 	switch sensor.Type {
