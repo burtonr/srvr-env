@@ -18,6 +18,8 @@
   - https://fritzing.org/download/
 - Arduino Mag sensor and relay:
   - https://www.instructables.com/Controlling-Light-Bulb-in-Your-Room-Using-MC-38-Wi/
+- Arduino Relay:
+  - https://www.circuitbasics.com/setting-up-a-5v-relay-on-the-arduino/ 
 - Arduino Float to string:
   - https://www.e-tinkers.com/2020/01/do-you-know-arduino-sprintf-and-floating-point/
 - Arduino variables and functions:
