@@ -1,6 +1,8 @@
 # Arduino (Sensor Data Collection)
 An Arduino Micro running the included code, while connected to a variety of sensors, and transmitting the data elsewhere to be processed.
 
+<img src="./srvr-env.png" width="500">
+
 ## enviro-duino.ino
 This is the main code that is uploaded to the Ardduino mounted in the server closet. This is intended to be just smart enough to get the data from all the connected sensors, and transmit the data with a label, over the serial bus. 
 
